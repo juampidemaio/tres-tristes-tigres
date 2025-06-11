@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="A new Flutter project.">
+
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="tres_tristes_tigres">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>tres_tristes_tigres</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-messaging-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDf8hXTJqpiNtaq45kGMxMkwUmRnlTdTCM",
+      authDomain: "pushnotification-86d31.firebaseapp.com",
+      projectId: "pushnotification-86d31",
+      storageBucket: "pushnotification-86d31.firebasestorage.app",
+      messagingSenderId: "283700309050",
+      appId: "1:283700309050:web:de2d13c5f77ce5def2d903",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const messaging = firebase.messaging();
+  </script>
+</head>
+<body>
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>
