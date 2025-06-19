@@ -218,6 +218,8 @@ Future<void> notificarAlDueno(String nombreCliente) async {
 
     return Scaffold(
       backgroundColor: Colors.white,
+      resizeToAvoidBottomInset: false,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -241,10 +243,10 @@ Future<void> notificarAlDueno(String nombreCliente) async {
                       ),
                     ),
                   ),
+                  SizedBox(height: 20),
 
-                  // Contenido principal
                   Expanded(
-                    child: Padding(
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 10,
@@ -253,6 +255,9 @@ Future<void> notificarAlDueno(String nombreCliente) async {
                         key: _formKey,
                         child: Container(
                           width: double.infinity,
+                          constraints: BoxConstraints(
+                            minHeight: MediaQuery.of(context).size.height - 160,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF26639C),
                             borderRadius: BorderRadius.circular(25),
@@ -265,6 +270,8 @@ Future<void> notificarAlDueno(String nombreCliente) async {
                             ],
                           ),
                           child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               // Título compacto
                               Container(
@@ -293,469 +300,51 @@ Future<void> notificarAlDueno(String nombreCliente) async {
                                 ),
                               ),
 
-                              // Formulario expandido
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 25,
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      // Botón Escanear DNI (solo para clientes registrados)
-                                      if (!esAnonimo) ...[
-                                        Container(
-                                          width: double.infinity,
-                                          margin: const EdgeInsets.only(
-                                            bottom: 8,
-                                          ),
-                                          child: ElevatedButton.icon(
-                                            icon: const Icon(
-                                              Icons.qr_code_scanner,
-                                              size: 18,
-                                            ),
-                                            label: const Text(
-                                              'ESCANEAR DNI',
-                                              style: TextStyle(fontSize: 14),
-                                            ),
-                                            onPressed: () {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (_) => ScannerPage(
-                                                        onScan: (valor) {
-                                                          procesarDatosDesdeQR(
-                                                            valor,
-                                                          );
-                                                        },
-                                                      ),
-                                                ),
-                                              );
-                                            },
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(
-                                                0xFFFD9400,
-                                              ),
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 8,
-                                                  ),
-                                              elevation: 3,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-
-                                      // Campos de formulario expandidos
-                                      Expanded(
-                                        child: Column(
-                                          children: [
-                                            // Campo de Nombre
-                                            Expanded(
-                                              child: Container(
-                                                margin: const EdgeInsets.only(
-                                                  bottom: 6,
-                                                ),
-                                                child: TextFormField(
-                                                  controller: nombreController,
-                                                  decoration: InputDecoration(
-                                                    hintText: 'Nombre',
-                                                    hintStyle: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontSize: 14,
-                                                    ),
-                                                    border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20,
-                                                          ),
-                                                      borderSide:
-                                                          BorderSide.none,
-                                                    ),
-                                                    filled: true,
-                                                    fillColor: Colors.white,
-                                                    contentPadding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 15,
-                                                          vertical: 8,
-                                                        ),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 14,
-                                                  ),
-                                                  validator:
-                                                      (v) =>
-                                                          v!.isEmpty
-                                                              ? 'Campo obligatorio'
-                                                              : null,
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Campos solo para clientes registrados
-                                            if (!esAnonimo) ...[
-                                              // Campo de Apellido
-                                              Expanded(
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(
-                                                    bottom: 6,
-                                                  ),
-                                                  child: TextFormField(
-                                                    controller:
-                                                        apellidoController,
-                                                    decoration: InputDecoration(
-                                                      hintText: 'Apellido',
-                                                      hintStyle: TextStyle(
-                                                        color: Colors.grey[600],
-                                                        fontSize: 14,
-                                                      ),
-                                                      border: OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              20,
-                                                            ),
-                                                        borderSide:
-                                                            BorderSide.none,
-                                                      ),
-                                                      filled: true,
-                                                      fillColor: Colors.white,
-                                                      contentPadding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 15,
-                                                            vertical: 8,
-                                                          ),
-                                                    ),
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 14,
-                                                    ),
-                                                    validator:
-                                                        (v) =>
-                                                            v!.isEmpty
-                                                                ? 'Campo obligatorio'
-                                                                : null,
-                                                  ),
-                                                ),
-                                              ),
-
-                                              // Campo de DNI
-                                              Expanded(
-                                                child: Container(
-                                                  margin: const EdgeInsets.only(
-                                                    bottom: 6,
-                                                  ),
-                                                  child: TextFormField(
-                                                    controller: dniController,
-                                                    decoration: InputDecoration(
-                                                      hintText: 'DNI',
-                                                      hintStyle: TextStyle(
-                                                        color: Colors.grey[600],
-                                                        fontSize: 14,
-                                                      ),
-                                                      border: OutlineInputBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              20,
-                                                            ),
-                                                        borderSide:
-                                                            BorderSide.none,
-                                                      ),
-                                                      filled: true,
-                                                      fillColor: Colors.white,
-                                                      contentPadding:
-                                                          const EdgeInsets.symmetric(
-                                                            horizontal: 15,
-                                                            vertical: 8,
-                                                          ),
-                                                    ),
-                                                    style: const TextStyle(
-                                                      color: Colors.black,
-                                                      fontSize: 14,
-                                                    ),
-                                                    validator:
-                                                        (v) =>
-                                                            v!.isEmpty
-                                                                ? 'Campo obligatorio'
-                                                                : null,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-
-                                            // Campo de Email
-                                            Expanded(
-                                              child: Container(
-                                                margin: const EdgeInsets.only(
-                                                  bottom: 6,
-                                                ),
-                                                child: TextFormField(
-                                                  controller: emailController,
-                                                  decoration: InputDecoration(
-                                                    hintText:
-                                                        'Correo electrónico',
-                                                    hintStyle: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontSize: 14,
-                                                    ),
-                                                    border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20,
-                                                          ),
-                                                      borderSide:
-                                                          BorderSide.none,
-                                                    ),
-                                                    filled: true,
-                                                    fillColor: Colors.white,
-                                                    contentPadding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 15,
-                                                          vertical: 8,
-                                                        ),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 14,
-                                                  ),
-                                                  validator: (v) {
-                                                    if (v == null || v.isEmpty)
-                                                      return 'Campo obligatorio';
-                                                    final regex = RegExp(
-                                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                                    );
-                                                    if (!regex.hasMatch(v))
-                                                      return 'Correo no válido';
-                                                    return null;
-                                                  },
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Campo de Contraseña
-                                            Expanded(
-                                              child: Container(
-                                                margin: const EdgeInsets.only(
-                                                  bottom: 6,
-                                                ),
-                                                child: TextFormField(
-                                                  controller:
-                                                      passwordController,
-                                                  obscureText: true,
-                                                  decoration: InputDecoration(
-                                                    hintText: 'Contraseña',
-                                                    hintStyle: TextStyle(
-                                                      color: Colors.grey[600],
-                                                      fontSize: 14,
-                                                    ),
-                                                    border: OutlineInputBorder(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            20,
-                                                          ),
-                                                      borderSide:
-                                                          BorderSide.none,
-                                                    ),
-                                                    filled: true,
-                                                    fillColor: Colors.white,
-                                                    contentPadding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 15,
-                                                          vertical: 8,
-                                                        ),
-                                                  ),
-                                                  style: const TextStyle(
-                                                    color: Colors.black,
-                                                    fontSize: 14,
-                                                  ),
-                                                  validator:
-                                                      (v) =>
-                                                          v != null &&
-                                                                  v.length < 6
-                                                              ? 'Mínimo 6 caracteres'
-                                                              : null,
-                                                ),
-                                              ),
-                                            ),
-                                            Expanded(
-                                            child: Container(
-                                              margin: const EdgeInsets.only(
-                                                bottom: 6,
-                                              ),
-                                              child: TextFormField(
-                                                controller: confirmPasswordController,
-                                                obscureText: true,
-                                                decoration: InputDecoration(
-                                                  hintText: 'Confirmar contraseña',
-                                                  hintStyle: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 14,
-                                                  ),
-                                                  border: OutlineInputBorder(
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    borderSide: BorderSide.none,
-                                                  ),
-                                                  filled: true,
-                                                  fillColor: Colors.white,
-                                                  contentPadding: const EdgeInsets.symmetric(
-                                                    horizontal: 15,
-                                                    vertical: 8,
-                                                  ),
-                                                ),
-                                                style: const TextStyle(
-                                                  color: Colors.black,
-                                                  fontSize: 14,
-                                                ),
-                                                validator: (v) {
-                                                  if (v == null || v.isEmpty) {
-                                                    return 'Este campo es obligatorio';
-                                                  }
-                                                  if (v != passwordController.text) {
-                                                    return 'Las contraseñas no coinciden';
-                                                  }
-                                                  return null;
-                                                },
-                                              ),
-                                            ),
-                                          ),
-
-
-                                            // Sección de imagen compacta
-                                            Container(
-                                              margin:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 8,
-                                                  ),
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.1,
-                                                ),
-                                                borderRadius:
-                                                    BorderRadius.circular(15),
-                                                border: Border.all(
-                                                  color: Colors.white
-                                                      .withOpacity(0.3),
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                children: [
-                                                  // Vista previa de imagen más pequeña
-                                                  Container(
-                                                    width: 60,
-                                                    height: 60,
-                                                    decoration: BoxDecoration(
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            10,
-                                                          ),
-                                                    ),
-                                                    child:
-                                                        imagen != null
-                                                            ? ClipRRect(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    10,
-                                                                  ),
-                                                              child: Image.file(
-                                                                imagen!,
-                                                                fit:
-                                                                    BoxFit
-                                                                        .cover,
-                                                              ),
-                                                            )
-                                                            : Container(
-                                                              decoration: BoxDecoration(
-                                                                color: Colors
-                                                                    .white
-                                                                    .withOpacity(
-                                                                      0.2,
-                                                                    ),
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      10,
-                                                                    ),
-                                                                border: Border.all(
-                                                                  color: Colors
-                                                                      .white
-                                                                      .withOpacity(
-                                                                        0.5,
-                                                                      ),
-                                                                  width: 1,
-                                                                ),
-                                                              ),
-                                                              child: const Icon(
-                                                                Icons.person,
-                                                                color:
-                                                                    Colors
-                                                                        .white,
-                                                                size: 30,
-                                                              ),
-                                                            ),
-                                                  ),
-                                                  const SizedBox(width: 15),
-                                                  // Botón Tomar Foto más compacto
-                                                  Expanded(
-                                                    child: ElevatedButton.icon(
-                                                      onPressed: pickImage,
-                                                      icon: const Icon(
-                                                        Icons.camera_alt,
-                                                        size: 16,
-                                                      ),
-                                                      label: const Text(
-                                                        'Tomar Foto',
-                                                        style: TextStyle(
-                                                          fontSize: 12,
-                                                        ),
-                                                      ),
-                                                      style: ElevatedButton.styleFrom(
-                                                        backgroundColor:
-                                                            const Color(
-                                                              0xFFFD9400,
-                                                            ),
-                                                        foregroundColor:
-                                                            Colors.white,
-                                                        shape: RoundedRectangleBorder(
-                                                          borderRadius:
-                                                              BorderRadius.circular(
-                                                                15,
-                                                              ),
-                                                        ),
-                                                        padding:
-                                                            const EdgeInsets.symmetric(
-                                                              vertical: 8,
-                                                            ),
-                                                        elevation: 3,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-
-                                      // Botón Registrar
+                              // Formulario - SOLUCIÓN 4: Remover Expanded de los campos
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 25,
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Botón Escanear DNI (solo para clientes registrados)
+                                    if (!esAnonimo) ...[
                                       Container(
                                         width: double.infinity,
                                         margin: const EdgeInsets.only(
                                           bottom: 15,
-                                          top: 10,
                                         ),
-                                        child: ElevatedButton(
-                                          onPressed: registrar,
+                                        child: ElevatedButton.icon(
+                                          icon: const Icon(
+                                            Icons.qr_code_scanner,
+                                            size: 18,
+                                          ),
+                                          label: const Text(
+                                            'ESCANEAR DNI',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                          onPressed: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (_) => ScannerPage(
+                                                      onScan: (valor) {
+                                                        procesarDatosDesdeQR(
+                                                          valor,
+                                                        );
+                                                      },
+                                                    ),
+                                              ),
+                                            );
+                                          },
                                           style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: const Color(
-                                              0xFF26639C,
+                                            backgroundColor: const Color(
+                                              0xFFFD9400,
                                             ),
+                                            foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
                                               borderRadius:
                                                   BorderRadius.circular(20),
@@ -765,18 +354,369 @@ Future<void> notificarAlDueno(String nombreCliente) async {
                                             ),
                                             elevation: 3,
                                           ),
-                                          child: const Text(
-                                            "REGISTRAR",
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 1,
-                                            ),
-                                          ),
                                         ),
                                       ),
                                     ],
-                                  ),
+
+                                    // Campo de Nombre - SIN Expanded
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15),
+                                      child: TextFormField(
+                                        controller: nombreController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Nombre',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 12,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator:
+                                            (v) =>
+                                                v!.isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                      ),
+                                    ),
+
+                                    // Campos solo para clientes registrados
+                                    if (!esAnonimo) ...[
+                                      // Campo de Apellido
+                                      Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 15,
+                                        ),
+                                        child: TextFormField(
+                                          controller: apellidoController,
+                                          decoration: InputDecoration(
+                                            hintText: 'Apellido',
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 15,
+                                                  vertical: 12,
+                                                ),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                          ),
+                                          validator:
+                                              (v) =>
+                                                  v!.isEmpty
+                                                      ? 'Campo obligatorio'
+                                                      : null,
+                                        ),
+                                      ),
+
+                                      // Campo de DNI
+                                      Container(
+                                        margin: const EdgeInsets.only(
+                                          bottom: 15,
+                                        ),
+                                        child: TextFormField(
+                                          controller: dniController,
+                                          decoration: InputDecoration(
+                                            hintText: 'DNI',
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 15,
+                                                  vertical: 12,
+                                                ),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                          ),
+                                          validator:
+                                              (v) =>
+                                                  v!.isEmpty
+                                                      ? 'Campo obligatorio'
+                                                      : null,
+                                        ),
+                                      ),
+                                    ],
+
+                                    // Campo de Email
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15),
+                                      child: TextFormField(
+                                        controller: emailController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Correo electrónico',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 12,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty)
+                                            return 'Campo obligatorio';
+                                          final regex = RegExp(
+                                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                          );
+                                          if (!regex.hasMatch(v))
+                                            return 'Correo no válido';
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+
+                                    // Campo de Contraseña
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15),
+                                      child: TextFormField(
+                                        controller: passwordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          hintText: 'Contraseña',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 12,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator:
+                                            (v) =>
+                                                v != null && v.length < 6
+                                                    ? 'Mínimo 6 caracteres'
+                                                    : null,
+                                      ),
+                                    ),
+
+                                    // Campo de Confirmar Contraseña
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 15),
+                                      child: TextFormField(
+                                        controller: confirmPasswordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          hintText: 'Confirmar contraseña',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 12,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty) {
+                                            return 'Este campo es obligatorio';
+                                          }
+                                          if (v != passwordController.text) {
+                                            return 'Las contraseñas no coinciden';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+
+                                    // Sección de imagen compacta
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 20),
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(15),
+                                        border: Border.all(
+                                          color: Colors.white.withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          // Vista previa de imagen más pequeña
+                                          Container(
+                                            width: 60,
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child:
+                                                imagen != null
+                                                    ? ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                      child: Image.file(
+                                                        imagen!,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    )
+                                                    : Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: Colors.white
+                                                              .withOpacity(0.5),
+                                                          width: 1,
+                                                        ),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.person,
+                                                        color: Colors.white,
+                                                        size: 30,
+                                                      ),
+                                                    ),
+                                          ),
+                                          const SizedBox(width: 15),
+                                          // Botón Tomar Foto más compacto
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: pickImage,
+                                              icon: const Icon(
+                                                Icons.camera_alt,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                'Tomar Foto',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFFD9400,
+                                                ),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                elevation: 3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Botón Registrar
+                                    Container(
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.only(bottom: 20),
+                                      child: ElevatedButton(
+                                        onPressed: registrar,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: const Color(
+                                            0xFF26639C,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 15,
+                                          ),
+                                          elevation: 3,
+                                        ),
+                                        child: const Text(
+                                          "REGISTRAR",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],

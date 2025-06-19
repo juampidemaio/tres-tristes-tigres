@@ -26,7 +26,6 @@ class _RegistroDuenoState extends State<RegistroDueno> {
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
 
-
   File? imagen;
   bool isLoading = false;
 
@@ -216,377 +215,505 @@ class _RegistroDuenoState extends State<RegistroDueno> {
     return '$prefijo$dni$verificador';
   }
 
-@override
-Widget build(BuildContext context) {
-  if (cargandoPerfil) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
-  }
+  @override
+  Widget build(BuildContext context) {
+    if (cargandoPerfil) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
-  if (perfilActual != 'dueño' && perfilActual != 'supervisor') {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Acceso denegado')),
-      body: const Center(
-        child: Text('No tenés permisos para acceder a esta sección.'),
-      ),
-    );
-  }
-
-  if (isLoading) {
-    return const Scaffold(body: Center(child: CircularProgressIndicator()));
-  }
-
-  return Scaffold(
-  backgroundColor: Colors.white,
-  appBar: AppBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    leading: IconButton(
-      icon: const Icon(Icons.arrow_back, color: Colors.black),
-      onPressed: () => Navigator.pop(context),
-    ),
-  ),
-  
-  
-  body: 
-  isLoading
-      ? const Center(child: CircularProgressIndicator())
-      
-      : SingleChildScrollView(
-    child: Column(
-      children: [
-        // Parte superior cuadriculada
-        Container(
-          height: 30,
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/imagenes/cuadriculado.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
+    if (perfilActual != 'dueño' && perfilActual != 'supervisor') {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Acceso denegado')),
+        body: const Center(
+          child: Text('No tenés permisos para acceder a esta sección.'),
         ),
+      );
+    }
 
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Form(
-            key: _formKey,
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: const Color(0xFF26639C),
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.2),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  // Título con fondo naranja
-                  Container(
-                    padding: const EdgeInsets.all(15),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFD9400),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                         widget.perfil == 'dueño'
-                            ? 'DUEÑO'
-                            :  widget.perfil == 'supervisor'
-                                ? 'SUPERVISOR'
-                                : '',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 1.2,
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+
+      body:
+          isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                child: Column(
+                  children: [
+                    // Parte superior cuadriculada
+                    Container(
+                      height: 30,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/imagenes/cuadriculado.png'),
+                          fit: BoxFit.cover,
                         ),
-                        textAlign: TextAlign.center,
                       ),
                     ),
-                  ),
 
-                  
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                    child: Column(
-                      children: [
-                        // Botón Escanear DNI
-                        Container(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Form(
+                        key: _formKey,
+                        child: Container(
                           width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          child: ElevatedButton.icon(
-                            icon: const Icon(
-                              Icons.qr_code_scanner,
-                              size: 18,
-                            ),
-                            label: const Text(
-                              'ESCANEAR DNI',
-                              style: TextStyle(fontSize: 14),
-                            ),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ScannerPage(
-                                    onScan: (valor) {
-                                      procesarDatosDesdeQR(valor);
-                                    },
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF26639C),
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 15,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              // Título con fondo naranja
+                              Container(
+                                padding: const EdgeInsets.all(15),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFD9400),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    widget.perfil == 'dueño'
+                                        ? 'DUEÑO'
+                                        : widget.perfil == 'supervisor'
+                                        ? 'SUPERVISOR'
+                                        : '',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 1.2,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
                                 ),
-                              );
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFFD9400),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
                               ),
-                              padding: const EdgeInsets.symmetric(vertical: 8),
-                              elevation: 3,
-                            ),
-                          ),
-                        ),
 
-                        // Campos de texto
-                        ...[
-                        {'controller': nombreController, 'hint': 'Nombre', 'validator': (v) => v!.isEmpty ? 'Campo obligatorio' : null},
-                        {'controller': apellidoController, 'hint': 'Apellido', 'validator': (v) => v!.isEmpty ? 'Campo obligatorio' : null},
-                        {'controller': dniController, 'hint': 'DNI', 'validator': (v) => v!.isEmpty ? 'Campo obligatorio' : null},
-                        {'controller': cuilController, 'hint': 'CUIL', 'validator': (v) => v!.isEmpty ? 'Campo obligatorio' : null},
-                      ].map<Widget>((field) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16), // ← más separación aquí
-                          child: TextFormField(
-                            controller: field['controller'] as TextEditingController,
-                            decoration: InputDecoration(
-                              hintText: field['hint'] as String,
-                              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                            ),
-                            style: const TextStyle(color: Colors.black, fontSize: 14),
-                            validator: field['validator'] as String? Function(String?)?,
-                          ),
-                        );
-                      }).toList(),
-
-
-                        // Campo Correo electrónico
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: TextFormField(
-                            controller: emailController,
-                            decoration: InputDecoration(
-                              hintText: 'Correo electrónico',
-                              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                            ),
-                            style: const TextStyle(color: Colors.black, fontSize: 14),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) return 'Campo obligatorio';
-                              final regex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                              if (!regex.hasMatch(v)) return 'Correo no válido';
-                              return null;
-                            },
-                          ),
-                        ),
-
-                        // Campo Contraseña
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: TextFormField(
-                            controller: passwordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              hintText: 'Contraseña',
-                              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                            ),
-                            style: const TextStyle(color: Colors.black, fontSize: 14),
-                            validator: (v) => v != null && v.length < 6 ? 'Mínimo 6 caracteres' : null,
-                          ),
-                        ),
-
-                        // Campo Confirmar Contraseña
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          child: TextFormField(
-                            controller: confirmPasswordController,
-                            obscureText: true,
-                            decoration: InputDecoration(
-                              hintText: 'Confirmar contraseña',
-                              hintStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(20),
-                                borderSide: BorderSide.none,
-                              ),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                            ),
-                            style: const TextStyle(color: Colors.black, fontSize: 14),
-                            validator: (v) {
-                              if (v == null || v.isEmpty) {
-                                return 'Este campo es obligatorio';
-                              }
-                              if (v != passwordController.text) {
-                                return 'Las contraseñas no coinciden';
-                              }
-                              return null;
-                            },
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-
-
-                      // Imagen compacta con botón integrado
-                      Container(
-                        margin: const EdgeInsets.symmetric(vertical: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(15),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            // Vista previa de la imagen (o ícono por defecto)
-                            Container(
-                              width: 60,
-                              height: 60,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: imagen != null
-                                  ? ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: Image.file(
-                                        imagen!,
-                                        fit: BoxFit.cover,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                child: Column(
+                                  children: [
+                                    // Botón Escanear DNI
+                                    Container(
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      child: ElevatedButton.icon(
+                                        icon: const Icon(
+                                          Icons.qr_code_scanner,
+                                          size: 18,
+                                        ),
+                                        label: const Text(
+                                          'ESCANEAR DNI',
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => ScannerPage(
+                                                    onScan: (valor) {
+                                                      procesarDatosDesdeQR(
+                                                        valor,
+                                                      );
+                                                    },
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(
+                                            0xFFFD9400,
+                                          ),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          elevation: 3,
+                                        ),
                                       ),
-                                    )
-                                  : Container(
+                                    ),
+
+                                    // Campos de texto
+                                    ...[
+                                      {
+                                        'controller': nombreController,
+                                        'hint': 'Nombre',
+                                        'validator':
+                                            (v) =>
+                                                v!.isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                      },
+                                      {
+                                        'controller': apellidoController,
+                                        'hint': 'Apellido',
+                                        'validator':
+                                            (v) =>
+                                                v!.isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                      },
+                                      {
+                                        'controller': dniController,
+                                        'hint': 'DNI',
+                                        'validator':
+                                            (v) =>
+                                                v!.isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                      },
+                                      {
+                                        'controller': cuilController,
+                                        'hint': 'CUIL',
+                                        'validator':
+                                            (v) =>
+                                                v!.isEmpty
+                                                    ? 'Campo obligatorio'
+                                                    : null,
+                                      },
+                                    ].map<Widget>((field) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 16,
+                                        ), // ← más separación aquí
+                                        child: TextFormField(
+                                          controller:
+                                              field['controller']
+                                                  as TextEditingController,
+                                          decoration: InputDecoration(
+                                            hintText: field['hint'] as String,
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 15,
+                                                  vertical: 8,
+                                                ),
+                                          ),
+                                          style: const TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 14,
+                                          ),
+                                          validator:
+                                              field['validator']
+                                                  as String? Function(String?)?,
+                                        ),
+                                      );
+                                    }).toList(),
+
+                                    // Campo Correo electrónico
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      child: TextFormField(
+                                        controller: emailController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Correo electrónico',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 8,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty)
+                                            return 'Campo obligatorio';
+                                          final regex = RegExp(
+                                            r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                          );
+                                          if (!regex.hasMatch(v))
+                                            return 'Correo no válido';
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+
+                                    // Campo Contraseña
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      child: TextFormField(
+                                        controller: passwordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          hintText: 'Contraseña',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 8,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator:
+                                            (v) =>
+                                                v != null && v.length < 6
+                                                    ? 'Mínimo 6 caracteres'
+                                                    : null,
+                                      ),
+                                    ),
+
+                                    // Campo Confirmar Contraseña
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 16),
+                                      child: TextFormField(
+                                        controller: confirmPasswordController,
+                                        obscureText: true,
+                                        decoration: InputDecoration(
+                                          hintText: 'Confirmar contraseña',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey[600],
+                                            fontSize: 14,
+                                          ),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 15,
+                                                vertical: 8,
+                                              ),
+                                        ),
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 14,
+                                        ),
+                                        validator: (v) {
+                                          if (v == null || v.isEmpty) {
+                                            return 'Este campo es obligatorio';
+                                          }
+                                          if (v != passwordController.text) {
+                                            return 'Las contraseñas no coinciden';
+                                          }
+                                          return null;
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+
+                                    // Imagen compacta con botón integrado
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.white.withOpacity(0.2),
-                                        borderRadius: BorderRadius.circular(10),
+                                        color: Colors.white.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(15),
                                         border: Border.all(
-                                          color: Colors.white.withOpacity(0.5),
+                                          color: Colors.white.withOpacity(0.3),
                                           width: 1,
                                         ),
                                       ),
-                                      child: const Icon(
-                                        Icons.person,
-                                        color: Colors.white,
-                                        size: 30,
+                                      child: Row(
+                                        children: [
+                                          // Vista previa de la imagen (o ícono por defecto)
+                                          Container(
+                                            width: 60,
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child:
+                                                imagen != null
+                                                    ? ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            10,
+                                                          ),
+                                                      child: Image.file(
+                                                        imagen!,
+                                                        fit: BoxFit.cover,
+                                                      ),
+                                                    )
+                                                    : Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.white
+                                                            .withOpacity(0.2),
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                              10,
+                                                            ),
+                                                        border: Border.all(
+                                                          color: Colors.white
+                                                              .withOpacity(0.5),
+                                                          width: 1,
+                                                        ),
+                                                      ),
+                                                      child: const Icon(
+                                                        Icons.person,
+                                                        color: Colors.white,
+                                                        size: 30,
+                                                      ),
+                                                    ),
+                                          ),
+                                          const SizedBox(width: 15),
+                                          // Botón compacto para tomar foto
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed: pickImage,
+                                              icon: const Icon(
+                                                Icons.camera_alt,
+                                                size: 16,
+                                              ),
+                                              label: const Text(
+                                                'Tomar Foto',
+                                                style: TextStyle(fontSize: 12),
+                                              ),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFFFD9400,
+                                                ),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(15),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 8,
+                                                    ),
+                                                elevation: 3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                            ),
-                            const SizedBox(width: 15),
-                            // Botón compacto para tomar foto
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: pickImage,
-                                icon: const Icon(Icons.camera_alt, size: 16),
-                                label: const Text(
-                                  'Tomar Foto',
-                                  style: TextStyle(fontSize: 12),
-                                ),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFD9400),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(15),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(vertical: 8),
-                                  elevation: 3,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-
-                        // Botón Registrar
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 15, top: 10),
-                          child: ElevatedButton.icon(
-                            onPressed: registrar,
-                            icon: const Icon(Icons.save),
-                            label: const Text(
-                              "REGISTRAR",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
+                                    // Botón Registrar
+                                    Container(
+                                      width: double.infinity,
+                                      margin: const EdgeInsets.only(
+                                        bottom: 15,
+                                        top: 10,
+                                      ),
+                                      child: ElevatedButton.icon(
+                                        onPressed: registrar,
+                                        icon: const Icon(Icons.save),
+                                        label: const Text(
+                                          "REGISTRAR",
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 1,
+                                          ),
+                                        ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.white,
+                                          foregroundColor: Color(0xFF26639C),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          elevation: 3,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Color(0xFF26639C),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              elevation: 3,
-                            ),
+                            ],
                           ),
                         ),
-
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-         // Cuadriculado inferior
-                  Container(
-                    height: 30,
-                    decoration: const BoxDecoration(
-                      image: DecorationImage(
-                        image: AssetImage('assets/imagenes/cuadriculado.png'),
-                        fit: BoxFit.cover,
                       ),
                     ),
-                  ),
-      ],
-      ),
-      ),
-      
-);
-      
-}
+                    // Cuadriculado inferior
+                    Container(
+                      height: 30,
+                      decoration: const BoxDecoration(
+                        image: DecorationImage(
+                          image: AssetImage('assets/imagenes/cuadriculado.png'),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+    );
+  }
 }
 
 // 📷 Pantalla de escaneo QR (abajo del todo)

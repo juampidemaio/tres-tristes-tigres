@@ -1,6 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
 
 class QrIngresoPage extends StatefulWidget {
   const QrIngresoPage({super.key});
@@ -52,9 +54,51 @@ class _QrIngresoPageState extends State<QrIngresoPage> {
       });
 
       _mostrarSnackbar('¡Ingresaste a la lista de espera!');
+
+      // 🔔 Notificar a los maîtres
+      await _enviarNotificacionAMaitres(nombre);
+
       _volverAlHome();
     } catch (e) {
       _mostrarSnackbar('Error al registrar ingreso: $e');
+    }
+  }
+
+  Future<void> _enviarNotificacionAMaitres(String nombreCliente) async {
+    try {
+      final maitreUsers = await supabase
+          .from('usuarios')
+          .select('id')
+          .eq('perfil', 'empleado')
+          .eq('tipo_empleado', 'maitre');
+
+      final userIds = maitreUsers.map((u) => u['id']).toList();
+
+      if (userIds.isEmpty) return;
+
+      final tokens = await supabase
+          .from('user_tokens')
+          .select('fcm_token, usuario_id')
+          .inFilter('usuario_id', userIds);
+
+      final url = Uri.parse('https://push-notif-api-iz1o.onrender.com/send-notification');
+
+      for (final row in tokens) {
+        final token = row['fcm_token'];
+        if (token != null && token.isNotEmpty) {
+          await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'token': token,
+              'title': 'Nuevo cliente en espera',
+              'body': '$nombreCliente está esperando ser atendido.',
+            }),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error enviando notificaciones: $e');
     }
   }
 

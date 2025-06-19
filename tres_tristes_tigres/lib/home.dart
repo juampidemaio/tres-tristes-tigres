@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:tres_tristes_tigres/gestion_maitre.dart';
+import 'package:tres_tristes_tigres/gestion_mozo.dart';
 import 'package:tres_tristes_tigres/supabase_service.dart';
 import 'package:tres_tristes_tigres/qrs/ingreso_local.dart';
 import 'login.dart';
 import './registros/registro_mesa.dart';
 import './registros/registro_dueno.dart';
 import './registros/registro_cliente.dart';
+import './registros/registro_producto.dart';
 import 'paginas_app/escanerQR.dart';
 import './gestion_clientes.dart';
 import 'package:tres_tristes_tigres/encuestas/estadisticas_page.dart';
-import 'package:tres_tristes_tigres/encuestas/encuesta_clientes.dart';
+import './gestion_cocinero.dart';
+import './gestion_bartender.dart';
+
+//import 'package:tres_tristes_tigres/encuestas/encuesta_clientes.dart';
 
 // Paleta de colores
 final backgroundColor = const Color(0xFF0E6BB7);
@@ -357,15 +362,44 @@ class _HomePageState extends State<HomePage> {
                                     );
                                   },
                                 ),
+                              ],
+                            ),
+                          ),
+                        ],
+
+                        // Opciones para Mozo
+                        if (!isLoading && tipoEmpleado == 'mozo') ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 25),
+                            child: Column(
+                              children: [
                                 _buildStyledButton(
-                                  icon: Icons.edit_note,
-                                  label: 'COMPLETAR ENCUESTA',
+                                  icon: Icons.people,
+                                  label: 'GESTION DE PEDIDOS',
                                   onPressed: () {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder:
-                                            (_) => const EncuestaPage_cliente(),
+                                        builder: (_) => GestionMozoPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 25),
+                            child: Column(
+                              children: [
+                                _buildStyledButton(
+                                  icon: Icons.chat,
+                                  label: 'GESTION DE CONSULTAS',
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => GestionMozoPage(),
                                       ),
                                     );
                                   },
@@ -374,6 +408,53 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                         ],
+
+                       // Opciones para Cocinero o Bartender
+                      if (!isLoading &&
+                          perfil == 'empleado' &&
+                          (tipoEmpleado == 'cocinero' || tipoEmpleado == 'bartender')) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 25),
+                          child: Column(
+                            children: [
+                              _buildStyledButton(
+                                icon: Icons.restaurant_menu,
+                                label: 'ALTA DE PRODUCTO',
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const RegistroProducto(),
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              _buildStyledButton(
+                                icon: Icons.list_alt,
+                                label: 'GESTIÓN DE PEDIDOS',
+                                onPressed: () {
+                                  if (tipoEmpleado == 'cocinero') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => GestionCocineroPage(),
+                                      ),
+                                    );
+                                  } else if (tipoEmpleado == 'bartender') {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => GestionBartenderPage(),
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
 
                         // Opciones para Maitre
                         if (!isLoading && tipoEmpleado == 'maitre') ...[

@@ -34,9 +34,7 @@ dependencies:
   permission_handler: ^11.3.1
   device_info_plus: ^10.1.0
   js: ^0.6.7
-  firebase_messaging_web : 3.10.7
-
-
+  firebase_messaging_web: 3.10.7
 
 dev_dependencies:
   flutter_test:

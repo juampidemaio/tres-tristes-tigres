@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -29,6 +29,41 @@ class _EncuestaPage_clienteState extends State<EncuestaPage_cliente> {
     const Color(0xFF98A6C2),
     const Color(0xFFF7F4EB),
   ];
+
+
+  Future<String?> subirImagenASupabase(Uint8List bytes, String path) async {
+  final supabase = Supabase.instance.client;
+
+  try {
+    await supabase.storage.from('fotos').uploadBinary(path, bytes);
+    final publicUrl = supabase.storage.from('fotos').getPublicUrl(path);
+    return publicUrl;
+  } catch (e) {
+    debugPrint('Error al subir imagen: $e');
+    return null;
+  }
+}
+
+Future<List<String?>> guardarFotosStorageEncuesta(List<XFile> imagenes) async {
+  List<String?> urls = [];
+
+  for (int i = 0; i < imagenes.length; i++) {
+    final bytes = await imagenes[i].readAsBytes();
+    final nombreArchivo = 'encuestas/encuesta_${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+
+    final url = await subirImagenASupabase(bytes, nombreArchivo);
+    urls.add(url);
+  }
+
+  // Completar con null si se enviaron menos de 3
+  while (urls.length < 3) {
+    urls.add(null);
+  }
+
+  return urls;
+}
+
+  
 
   @override
   Widget build(BuildContext context) {
@@ -130,25 +165,43 @@ class _EncuestaPage_clienteState extends State<EncuestaPage_cliente> {
                 ),
 
                 const SizedBox(height: 16),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: chartColors[0],
-                    foregroundColor: Colors.black,
-                  ),
-                  onPressed: () async {
-                    final picker = ImagePicker();
-                    final selected = await picker.pickMultiImage();
-                    if (selected.length > 3) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Máximo 3 imágenes')),
-                      );
-                    } else {
-                      setState(() => imagenes = selected);
-                    }
-                  },
-                  child: const Text('Seleccionar hasta 3 fotos'),
+               ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: chartColors[0],
+                  foregroundColor: Colors.black,
                 ),
+                onPressed: () async {
+                  if (imagenes.length >= 3) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Ya tomaste 3 fotos')),
+                    );
+                    return;
+                  }
+
+                  final picker = ImagePicker();
+                  final nuevaFoto = await picker.pickImage(source: ImageSource.camera);
+                  if (nuevaFoto != null) {
+                    setState(() => imagenes.add(nuevaFoto));
+                  }
+                },
+                child: Text('Tomar foto (${imagenes.length}/3)'),
+              ),
+              if (imagenes.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                children: imagenes.map((img) {
+                  return Image.file(
+                    File(img.path),
+                    width: 200,
+                    height: 200,
+                    fit: BoxFit.cover,
+                  );
+                }).toList(),
+              ),
+            ],
+
+
 
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -168,80 +221,94 @@ class _EncuestaPage_clienteState extends State<EncuestaPage_cliente> {
   }
 
   Future<void> _enviarEncuesta() async {
-    if (_formKey.currentState!.validate()) {
-      if (ambiente == null) {
+  if (_formKey.currentState!.validate()) {
+    if (ambiente == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor seleccioná el ambiente')),
+      );
+      return;
+    }
+
+    if (imagenes.length > 3) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Máximo 3 imágenes')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final supabase = Supabase.instance.client;
+    List<String?> urls = [null, null, null];
+
+    try {
+      for (int i = 0; i < imagenes.length; i++) {
+        final file = File(imagenes[i].path);
+        final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
+        final storagePath = 'encuestas_cliente/$fileName';
+
+        // 🧠 Usar bucket "fotos"
+        await supabase.storage.from('fotos').upload(storagePath, file);
+
+        final publicUrl =
+            supabase.storage.from('fotos').getPublicUrl(storagePath);
+
+        urls[i] = publicUrl;
+      }
+
+      final user = supabase.auth.currentUser;
+      if (user == null) {
+        Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Por favor seleccioná el ambiente')),
+          const SnackBar(content: Text('Error: Usuario no autenticado')),
         );
         return;
       }
 
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+      await supabase.from('encuestas').insert({
+        'usuario_id': user.id,
+        'puntuacion_general': puntuacion.toInt(),
+        'atencion': atencion,
+        'recomendaria': recomendaria,
+        'experiencia': experiencia,
+        'ambiente': ambiente!.toLowerCase(),
+        'imagen1': urls[0],
+        'imagen2': urls[1],
+        'imagen3': urls[2],
+      });
+
+      await supabase
+      .from('encuestas') 
+      .update({'realizo_encuesta': true})
+      .eq('usuario_id', user.id);
+
+      Navigator.pop(context); // Cierra el diálogo de carga
+
+      Navigator.pop(context, true); // 🔥 Volver a la pantalla principal e indicar éxito
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('¡Encuesta enviada con éxito!')),
       );
 
-      final supabase = Supabase.instance.client;
-      List<String?> urls = [null, null, null];
 
-      try {
-        for (int i = 0; i < imagenes.length; i++) {
-          final file = File(imagenes[i].path);
-          final fileName = '${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-          final storagePath = 'encuestas_cliente/$fileName';
+      setState(() {
+        puntuacion = 5;
+        atencion = 'buena';
+        recomendaria = false;
+        experiencia = '';
+        ambiente = null;
+        imagenes = [];
+      });
+    } catch (e) {
+     Navigator.pop(context); // Cierra el diálogo de carga
+      Navigator.pop(context, true); // Vuelve a la pantalla anterior e indica éxito
 
-          await supabase.storage
-              .from('encuestas_cliente')
-              .upload(storagePath, file);
-
-          final publicUrl = supabase.storage
-              .from('encuestas_cliente')
-              .getPublicUrl(storagePath);
-
-          urls[i] = publicUrl;
-        }
-
-        final user = supabase.auth.currentUser;
-        if (user == null) {
-          Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Error: Usuario no autenticado')),
-          );
-          return;
-        }
-
-        await supabase.from('encuestas').insert({
-          'usuario_id': user.id,
-          'puntuacion_general': puntuacion.toInt(),
-          'atencion': atencion,
-          'recomendaria': recomendaria,
-          'experiencia': experiencia,
-          'ambiente': ambiente!.toLowerCase(),
-          'imagen1': urls[0],
-          'imagen2': urls[1],
-          'imagen3': urls[2],
-        });
-
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('¡Encuesta enviada con éxito!')),
-        );
-
-        setState(() {
-          puntuacion = 5;
-          atencion = 'buena';
-          recomendaria = false;
-          experiencia = '';
-          ambiente = null;
-          imagenes = [];
-        });
-      } catch (e) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al enviar encuesta: $e')),
-        );
-      }
     }
   }
+}
+
 }

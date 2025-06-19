@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:tres_tristes_tigres/encuestas/encuesta_clientes.dart';
+import 'package:tres_tristes_tigres/encuestas/estadisticas_page.dart';
+import 'package:tres_tristes_tigres/home.dart';
 import '../supabase_service.dart';
 import '../login.dart';
+import '../paginas_app/escanerQR.dart';
+import '../paginas_app/menu.dart';
 
 class Principalcliente extends StatefulWidget {
   final String url;
-  const Principalcliente({super.key, required this.url});
+  final String estadoPedido; 
+   final bool escaneoRealizado;
+
+  const Principalcliente({
+    super.key,
+    required this.url,
+    this.estadoPedido = "",
+    this.escaneoRealizado = false,
+  });
 
   @override
   State<Principalcliente> createState() => _PrincipalclienteState();
@@ -18,13 +31,38 @@ class _PrincipalclienteState extends State<Principalcliente> {
   int numeroMesa = 0;
   int? numeroMesaCorrecta;
   bool mesaCorrecta = false;
+  bool yaRealizoEncuesta = false;
 
   @override
   void initState() {
+    super.initState();
     obtenerNumeroMesa();
     comprobarEstadoMesa();
     obtenerMesaCorrecta();
+    verificarEncuesta();
   }
+Future<void> verificarEncuesta() async {
+  final supabase = Supabase.instance.client;
+  final user = supabase.auth.currentUser;
+
+  if (user == null) return;
+
+ final response = await supabase
+    .from('encuestas')
+    .select('realizo_encuesta')
+    .eq('usuario_id', user.id)
+    .order('fecha_creacion', ascending: false) // 🔽 ordena por fecha
+    .limit(1) // 🔝 solo la más reciente
+    .maybeSingle(); // ✅ ahora sí, seguro devuelve una o ninguna
+
+
+  print('Respuesta encuesta: $response');
+  setState(() {
+    yaRealizoEncuesta = response?['realizo_encuesta'] ?? false;
+  });
+  print('Estado yaRealizoEncuesta actualizado a: $yaRealizoEncuesta');
+}
+
 
   obtenerMesaCorrecta() async {
     int? resultado = await supabaseService.comprobarNumeroMesa(
@@ -135,37 +173,49 @@ class _PrincipalclienteState extends State<Principalcliente> {
                                 child: ClipOval(
                                   child: Image.asset(
                                     'assets/imagenes/icono_blanco.png',
-                                    width: 60,
-                                    height: 60,
+                                    width: 50,
+                                    height: 50,
                                     fit: BoxFit.cover,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 20),
                               // Título INICIO
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 40,
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFD9400),
-                                  borderRadius: BorderRadius.circular(25),
-                                ),
-                                child: const Text(
-                                  'INICIO',
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                    letterSpacing: 2,
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.pushAndRemoveUntil(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => HomePage(),
+                                    ),
+                                    (route) =>
+                                        false, // elimina todas las pantallas anteriores
+                                  );
+                                },
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 40,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFD9400),
+                                    borderRadius: BorderRadius.circular(25),
+                                  ),
+                                  child: const Text(
+                                    'INICIO',
+                                    style: TextStyle(
+                                      fontSize: 28,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                      letterSpacing: 2,
+                                    ),
                                   ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 8),
 
                         // Opciones del menú
                         if (estadoMesa == "ocupada" && mesaCorrecta) ...[
@@ -174,204 +224,354 @@ class _PrincipalclienteState extends State<Principalcliente> {
                             child: Column(
                               children: [
                                 // Botón Consultar Mozo
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const LoginPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.person_add,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'CONSULTAR MOZO',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.person_add,
-                                      color: Color(0xFF26639C),
-                                    ),
-                                    label: const Text(
-                                      'CONSULTAR MOZO',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        fontFamily: 'Roboto',
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF26639C),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      elevation: 3,
                                     ),
                                   ),
-                                ),
 
                                 // Botón Menú
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder:
+                                                (_) => Menu(url: widget.url),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.restaurant_menu,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'MENÚ',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.restaurant_menu,
-                                      color: Color(0xFF26639C),
-                                    ),
-                                    label: const Text(
-                                      'MENÚ',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        fontFamily: 'Roboto',
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF26639C),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      elevation: 3,
                                     ),
                                   ),
-                                ),
 
-                                // Botón Estado Pedidos
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
+                                //BOTON DE ESCANEO
+                                if (widget.estadoPedido == "pendiente" ||
+                                    widget.estadoPedido ==
+                                        "enProceso") // mostrar sólo si aplica
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const Escanerqr(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.list_alt,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'ESCANEA PARA VER MAS OPCIONES',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.8,
+                                          fontFamily: 'Roboto',
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.list_alt,
-                                      color: Color(0xFF26639C),
-                                    ),
-                                    label: const Text(
-                                      'ESTADO PEDIDOS',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        fontFamily: 'Roboto',
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF26639C),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      elevation: 3,
                                     ),
                                   ),
-                                ),
 
-                                // Botón Encuesta Satisfacción
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 15),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
+                                //BOTON ESTADO DEL PEDIDO
+                                if (widget.escaneoRealizado &&
+                                    (widget.estadoPedido == "pendiente" ||
+                                    widget.estadoPedido == "enProceso" ||
+                                    widget.estadoPedido == "paraEnviar"))
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              backgroundColor: const Color(
+                                                0xFF0E6BB7,
+                                              ),
+                                              title: const Text(
+                                                "Estado del Pedido",
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontSize: 22,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              content: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    "Tu pedido se encuentra actualmente:",
+                                                    style: TextStyle(
+                                                      color: Colors.white
+                                                          .withOpacity(0.9),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 10),
+                                                  Text(
+                                                    widget.estadoPedido ==
+                                                            "pendiente"
+                                                        ? "⏳ Pendiente de confirmación por el mozo."
+                                                        : "🍽️ En proceso. El equipo ya está preparando tu pedido.",
+                                                    style: const TextStyle(
+                                                      color: Colors.amber,
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 20),
+                                                  Text(
+                                                    "Gracias por tu paciencia 😊",
+                                                    style: TextStyle(
+                                                      color: Colors.white
+                                                          .withOpacity(0.8),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed:
+                                                      () =>
+                                                          Navigator.of(
+                                                            context,
+                                                          ).pop(),
+                                                  child: const Text(
+                                                    "Cerrar",
+                                                    style: TextStyle(
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.list_alt,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'ESTADO PEDIDOS',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.star_rate,
-                                      color: Color(0xFF26639C),
-                                    ),
-                                    label: const Text(
-                                      'ENCUESTA SATISFACCIÓN',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        fontFamily: 'Roboto',
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF26639C),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      elevation: 3,
                                     ),
                                   ),
+
+                              //BOTON ENCUESTA SATISFACCION
+                               if (widget.estadoPedido == "pendiente" ||
+                                    widget.estadoPedido == "enProceso" ||
+                                    widget.estadoPedido == "paraEnviar")
+                              Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.only(bottom: 15),
+                                child: ElevatedButton.icon(
+                                  onPressed: () async {
+                                  if (yaRealizoEncuesta) {
+                                    print("Mostrando resultados porque ya realizó encuesta");
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => EstadisticasPage()),
+                                    );
+                                  } else {
+                                    print("Todavía no realizó encuesta, mostrando formulario");
+                                    final resultado = await Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (_) => EncuestaPage_cliente()),
+                                    );
+
+                                    print("Resultado al volver de encuesta: $resultado");
+                                    if (resultado == true) {
+                                      verificarEncuesta(); // 🔄 se actualiza yaRealizoEncuesta
+                                    }
+                                  }
+                                },
+
+
+                                  icon: Icon(
+                                    yaRealizoEncuesta ? Icons.bar_chart : Icons.star_rate,
+                                    color: const Color(0xFF26639C),
+                                  ),
+                                  label: Text(
+                                    yaRealizoEncuesta ? 'VER RESULTADOS ENCUESTA' : 'ENCUESTA SATISFACCIÓN',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                      fontFamily: 'Roboto',
+                                    ),
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.white,
+                                    foregroundColor: const Color(0xFF26639C),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(25),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(vertical: 15),
+                                    elevation: 3,
+                                  ),
                                 ),
+                              ),
 
                                 // Botón Juegos
-                                Container(
-                                  width: double.infinity,
-                                  margin: const EdgeInsets.only(bottom: 20),
-                                  child: ElevatedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginPage(),
+                                if (widget.estadoPedido == "enProceso")
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const LoginPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.games,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'JUEGOS',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
                                         ),
-                                      );
-                                    },
-                                    icon: const Icon(
-                                      Icons.games,
-                                      color: Color(0xFF26639C),
-                                    ),
-                                    label: const Text(
-                                      'JUEGOS',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 1,
-                                        fontFamily: 'Roboto',
                                       ),
-                                    ),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: const Color(0xFF26639C),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(25),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
                                       ),
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 15,
-                                      ),
-                                      elevation: 3,
                                     ),
                                   ),
-                                ),
 
                                 // Botón de logout en la parte inferior
                                 Container(

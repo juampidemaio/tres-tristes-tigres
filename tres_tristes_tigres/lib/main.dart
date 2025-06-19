@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import './splash/splash_animado.dart';
 import 'firebase_setup_stub.dart' if (dart.library.io) 'firebase_setup_android.dart';
+import 'package:firebase_core/firebase_core.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  await Firebase.initializeApp();
   // Inicializar Supabase
   await Supabase.initialize(
     url: 'https://rbuseufzyafvgoojbdrb.supabase.co',

@@ -1,4 +1,3 @@
-// (imports sin cambios)
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
@@ -77,7 +76,7 @@ class _ClientesMaitrePageState extends State<ClientesMaitrePage> {
     final mesasDisponibles = await supabase
         .from('mesas')
         .select()
-        .eq('estadoMesa', 'Libre');
+        .eq('estadoMesa', 'libre');
 
     if (mesasDisponibles.isEmpty) {
       showDialog(
@@ -170,9 +169,7 @@ class _ClientesMaitrePageState extends State<ClientesMaitrePage> {
           .eq('id', cliente['usuario_id'])
           .single();
 
-      if (response == null) {
-        throw Exception('Usuario no encontrado');
-      }
+      if (response == null) throw Exception('Usuario no encontrado');
 
       await supabase
           .from('ingresos_local')
