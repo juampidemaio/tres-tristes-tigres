@@ -56,6 +56,8 @@ class _GestionMozoPageState extends State<GestionMozoPage> {
 }
 
 
+
+
 Future<void> actualizarEstado(int idPedido, String nuevoEstado) async {
   final client = Supabase.instance.client;
 
@@ -64,6 +66,8 @@ Future<void> actualizarEstado(int idPedido, String nuevoEstado) async {
       .from('pedidos')
       .update({'estado': nuevoEstado})
       .eq('id', idPedido);
+
+  
 
   // 2. Obtenemos el pedido completo
   final pedidoData = await client
@@ -81,32 +85,46 @@ Future<void> actualizarEstado(int idPedido, String nuevoEstado) async {
       .select('id, tipo')
       .inFilter('id', productoIds);
 
-  final tieneCocina = productos.any((p) => p['tipo'] == 'cocina');
-  final tieneBar = productos.any((p) => p['tipo'] == 'bar');
+
+  final tieneComida = productos.any((p) => p['tipo'] == 'comida');
+  final tienePostre = productos.any((p) => p['tipo'] == 'postre');
+  final tieneBebida = productos.any((p) => p['tipo'] == 'bebida');
+
+    final updateData = <String, dynamic>{};
+  if (tieneComida) updateData['comida_realizada'] = false;
+  if (tienePostre) updateData['postre_realizado'] = false;
+  if (tieneBebida) updateData['bebida_realizada'] = false;
+  
+  if (updateData.isNotEmpty) {
+    await client.from('pedidos').update(updateData).eq('id', idPedido);
+  }
 
   // 4. Buscamos empleados a notificar
   List<String> perfiles = [];
-  if (tieneCocina) perfiles.add('cocinero');
-  if (tieneBar) perfiles.add('bartender');
+  if (tieneComida) perfiles.add('cocinero');
+  if (tienePostre) perfiles.add('cocinero');
+  if (tieneBebida) perfiles.add('bartender');
 
   final usuarios = await client
-      .from('usuarios')
-      .select('id')
-      .eq('perfil', 'empleado')
-      .inFilter('tipo_empleado', perfiles);
+  .from('usuarios')
+  .select('id')
+  .eq('perfil', 'empleado')
+  .inFilter('tipo_empleado', perfiles);
 
   final userIds = usuarios.map((u) => u['id']).toList();
 
   final tokens = await client
-      .from('user_tokens')
-      .select('fcm_token, usuario_id')
-      .inFilter('usuario_id', userIds);
+    .from('user_tokens')
+    .select('fcm_token, usuario_id')
+    .inFilter('usuario_id', userIds);
+
 
   final url = Uri.parse('https://push-notif-api-iz1o.onrender.com/send-notification');
 
+  final tokensUnicos = <String>{};
   for (final row in tokens) {
     final token = row['fcm_token'];
-    if (token != null) {
+    if (token != null && tokensUnicos.add(token)) {
       await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -117,13 +135,17 @@ Future<void> actualizarEstado(int idPedido, String nuevoEstado) async {
         }),
       );
     }
-  }
+}
+
 
   // 5. Refrescar lista
   fetchPedidos();
 }
 
-  Widget buildPedidoTile(Map pedido) {
+
+
+
+ Widget buildPedidoTile(Map pedido) {
   return Card(
     color: cardColor,
     margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -138,31 +160,88 @@ Future<void> actualizarEstado(int idPedido, String nuevoEstado) async {
           Text("Importe: \$${pedido['importe']}", style: const TextStyle(color: Colors.white)),
           Text("Tiempo: ${pedido['tiempoPromedio']} min", style: const TextStyle(color: Colors.white)),
           Text("Estado: ${pedido['estado']}", style: const TextStyle(color: Colors.white70)),
+          if (pedido['estado'] == 'enProceso') ...[
+            SizedBox(height: 8),
+            Row(
+              children: [
+                Icon(
+                  pedido['comida_realizada'] == true ? Icons.check_circle : Icons.hourglass_bottom,
+                  color: pedido['comida_realizada'] == true ? Colors.green : Colors.orange,
+                  size: 18,
+                ),
+                SizedBox(width: 4),
+                Text("Comida", style: TextStyle(color: Colors.white)),
+                
+                SizedBox(width: 12),
+                Icon(
+                  pedido['postre_realizado'] == true ? Icons.check_circle : Icons.hourglass_bottom,
+                  color: pedido['postre_realizado'] == true ? Colors.green : Colors.orange,
+                  size: 18,
+                ),
+                SizedBox(width: 4),
+                Text("Postre", style: TextStyle(color: Colors.white)),
+                
+                SizedBox(width: 12),
+                Icon(
+                  pedido['bebida_realizada'] == true ? Icons.check_circle : Icons.hourglass_bottom,
+                  color: pedido['bebida_realizada'] == true ? Colors.green : Colors.orange,
+                  size: 18,
+                ),
+                SizedBox(width: 4),
+                Text("Bebida", style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ],
         ],
       ),
       trailing: pedido['estado'] == 'pendiente'
-    ? ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFF9100),
-          foregroundColor: Colors.white,
-        ),
-        onPressed: () => actualizarEstado(pedido['id'], 'enProceso'),
-        child: const Text("Confirmar"),
-      )
-    : pedido['estado'] == 'paraEnviar'
-        ? ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFFF9100),
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => actualizarEstado(pedido['id'], 'entregado'),
-            child: const Text("Entregar"),
-          )
-        : null,
-
+          ? ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF9100),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => actualizarEstado(pedido['id'], 'enProceso'),
+              child: const Text("Confirmar"),
+            )
+          : pedido['estado'] == 'paraEnviar'
+          ? ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF9100),
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text("¿Confirmar pedido?"),
+                      content: const Text("¿Estás seguro que el pedido está para enviar?"),
+                      actions: [
+                        TextButton(
+                          child: const Text("Cancelar"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: const Text("Confirmar"),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            actualizarEstado(pedido['id'], 'entregado');
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+              child: const Text("Entregar"),
+            )
+          : null,
     ),
   );
 }
+
 
 
   @override

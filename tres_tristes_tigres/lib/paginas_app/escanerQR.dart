@@ -6,7 +6,8 @@ import '../supabase_service.dart';
 import '../supabase_service.dart';
 
 class Escanerqr extends StatefulWidget {
-  const Escanerqr({super.key});
+  final bool puedePedirCuenta;
+  const Escanerqr({super.key, this.puedePedirCuenta = false});
 
   @override
   State<Escanerqr> createState() => _EscanerqrState();
@@ -59,6 +60,44 @@ class _EscanerqrState extends State<Escanerqr> {
             _yaDetectado = false;
           }
 
+          if (codigo != null &&
+              estadoPedido == "recibido" &&
+              widget.puedePedirCuenta) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => Principalcliente(
+                      url: codigo,
+                      estadoPedido: estadoPedido,
+                      escaneoRealizado: true,
+                      puedePedirCuenta: true,
+                    ),
+              ),
+            );
+          } else {
+            _yaDetectado = false;
+          }
+
+          if (codigo != null &&
+                  estadoPedido == "recibido" &&
+                  !widget.puedePedirCuenta ||
+              codigo != null && estadoPedido == "entregado") {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => Principalcliente(
+                      url: codigo,
+                      estadoPedido: estadoPedido,
+                      escaneoRealizado: true,
+                    ),
+              ),
+            );
+          } else {
+            _yaDetectado = false;
+          }
+
           if (codigo != null && estadoPedido == "enProceso") {
             Navigator.pushReplacement(
               context,
@@ -68,6 +107,22 @@ class _EscanerqrState extends State<Escanerqr> {
                       url: codigo,
                       estadoPedido: estadoPedido,
                       escaneoRealizado: true, // <-- acá lo pasás
+                    ),
+              ),
+            );
+          } else {
+            _yaDetectado = false;
+          }
+
+          if (codigo != null && estadoPedido == "paraEnviar") {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => Principalcliente(
+                      url: codigo,
+                      estadoPedido: estadoPedido, // <-- acá lo pasás
+                      escaneoRealizado: true,
                     ),
               ),
             );

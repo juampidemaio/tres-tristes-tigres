@@ -10,14 +10,18 @@ import '../paginas_app/menu.dart';
 
 class Principalcliente extends StatefulWidget {
   final String url;
-  final String estadoPedido; 
-   final bool escaneoRealizado;
+  final String estadoPedido;
+  final bool escaneoRealizado;
+  final bool pedidoFinalizado;
+  final bool puedePedirCuenta;
 
   const Principalcliente({
     super.key,
     required this.url,
     this.estadoPedido = "",
     this.escaneoRealizado = false,
+    this.pedidoFinalizado = false,
+    this.puedePedirCuenta = false,
   });
 
   @override
@@ -41,28 +45,28 @@ class _PrincipalclienteState extends State<Principalcliente> {
     obtenerMesaCorrecta();
     verificarEncuesta();
   }
-Future<void> verificarEncuesta() async {
-  final supabase = Supabase.instance.client;
-  final user = supabase.auth.currentUser;
 
-  if (user == null) return;
+  Future<void> verificarEncuesta() async {
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
 
- final response = await supabase
-    .from('encuestas')
-    .select('realizo_encuesta')
-    .eq('usuario_id', user.id)
-    .order('fecha_creacion', ascending: false) // 🔽 ordena por fecha
-    .limit(1) // 🔝 solo la más reciente
-    .maybeSingle(); // ✅ ahora sí, seguro devuelve una o ninguna
+    if (user == null) return;
 
+    final response =
+        await supabase
+            .from('encuestas')
+            .select('realizo_encuesta')
+            .eq('usuario_id', user.id)
+            .order('fecha_creacion', ascending: false) // 🔽 ordena por fecha
+            .limit(1) // 🔝 solo la más reciente
+            .maybeSingle(); // ✅ ahora sí, seguro devuelve una o ninguna
 
-  print('Respuesta encuesta: $response');
-  setState(() {
-    yaRealizoEncuesta = response?['realizo_encuesta'] ?? false;
-  });
-  print('Estado yaRealizoEncuesta actualizado a: $yaRealizoEncuesta');
-}
-
+    print('Respuesta encuesta: $response');
+    setState(() {
+      yaRealizoEncuesta = response?['realizo_encuesta'] ?? false;
+    });
+    print('Estado yaRealizoEncuesta actualizado a: $yaRealizoEncuesta');
+  }
 
   obtenerMesaCorrecta() async {
     int? resultado = await supabaseService.comprobarNumeroMesa(
@@ -106,8 +110,37 @@ Future<void> verificarEncuesta() async {
     usuarioMesa = await supabaseService.comprobarUsuarioMesa(numeroMesa);
   }
 
+  modificarEstadoPedido(String nuevoEstado) async {
+    await supabaseService.modificarEstadoPedido(
+      SupabaseService.client.auth.currentUser!.email!,
+      nuevoEstado,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    String mensajeEstado;
+    switch (widget.estadoPedido) {
+      case "pendiente":
+        mensajeEstado = "⏳ Pendiente de confirmación por el mozo.";
+        break;
+      case "enProceso":
+        mensajeEstado =
+            "🍽️ En proceso. El equipo ya está preparando tu pedido.";
+        break;
+      case "entregado":
+        mensajeEstado = "📦 En camino. El mozo ya te esta llevando tu pedido.";
+        break;
+      case "recibido":
+        mensajeEstado = "✅ En tu mesa. ¡Buen provecho!";
+        break;
+      case "paraEnviar":
+        mensajeEstado = "listo para llevar a la mesa.😊!!!";
+        break;
+      default:
+        mensajeEstado = "📦 jajant perdimos tu pedido";
+        break;
+    }
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
@@ -224,109 +257,115 @@ Future<void> verificarEncuesta() async {
                             child: Column(
                               children: [
                                 // Botón Consultar Mozo
-                                  Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.only(bottom: 15),
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const LoginPage(),
-                                          ),
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.person_add,
-                                        color: Color(0xFF26639C),
-                                      ),
-                                      label: const Text(
-                                        'CONSULTAR MOZO',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                          fontFamily: 'Roboto',
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 15),
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginPage(),
                                         ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: const Color(
-                                          0xFF26639C,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            25,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 15,
-                                        ),
-                                        elevation: 3,
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.person_add,
+                                      color: Color(0xFF26639C),
+                                    ),
+                                    label: const Text(
+                                      'CONSULTAR MOZO',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                        fontFamily: 'Roboto',
                                       ),
                                     ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: const Color(0xFF26639C),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 15,
+                                      ),
+                                      elevation: 3,
+                                    ),
                                   ),
+                                ),
 
                                 // Botón Menú
-                                  Container(
-                                    width: double.infinity,
-                                    margin: const EdgeInsets.only(bottom: 15),
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder:
-                                                (_) => Menu(url: widget.url),
-                                          ),
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.restaurant_menu,
-                                        color: Color(0xFF26639C),
-                                      ),
-                                      label: const Text(
-                                        'MENÚ',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          letterSpacing: 1,
-                                          fontFamily: 'Roboto',
+                                Container(
+                                  width: double.infinity,
+                                  margin: const EdgeInsets.only(bottom: 15),
+                                  child: ElevatedButton.icon(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => Menu(url: widget.url),
                                         ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.white,
-                                        foregroundColor: const Color(
-                                          0xFF26639C,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            25,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 15,
-                                        ),
-                                        elevation: 3,
+                                      );
+                                    },
+                                    icon: const Icon(
+                                      Icons.restaurant_menu,
+                                      color: Color(0xFF26639C),
+                                    ),
+                                    label: const Text(
+                                      'MENÚ',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 1,
+                                        fontFamily: 'Roboto',
                                       ),
                                     ),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: const Color(0xFF26639C),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(25),
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 15,
+                                      ),
+                                      elevation: 3,
+                                    ),
                                   ),
+                                ),
 
                                 //BOTON DE ESCANEO
                                 if (widget.estadoPedido == "pendiente" ||
+                                    widget.estadoPedido == "enProceso" ||
+                                    widget.estadoPedido == "paraEnviar" ||
+                                    widget.estadoPedido == "entregado" ||
                                     widget.estadoPedido ==
-                                        "enProceso") // mostrar sólo si aplica
+                                        "recibido") // mostrar sólo si aplica
                                   Container(
                                     width: double.infinity,
                                     margin: const EdgeInsets.only(bottom: 15),
                                     child: ElevatedButton.icon(
                                       onPressed: () {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => const Escanerqr(),
-                                          ),
-                                        );
+                                        if (widget.estadoPedido == "recibido") {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => const Escanerqr(
+                                                    puedePedirCuenta: true,
+                                                  ),
+                                            ),
+                                          );
+                                        } else {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => const Escanerqr(),
+                                            ),
+                                          );
+                                        }
                                       },
                                       icon: const Icon(
                                         Icons.list_alt,
@@ -359,11 +398,85 @@ Future<void> verificarEncuesta() async {
                                     ),
                                   ),
 
+                                //BOTON CONFIRMAR PEDIDO
+                                if (widget.estadoPedido == "entregado")
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: const Text(
+                                                "¿Confirmar pedido?",
+                                              ),
+                                              content: const Text(
+                                                "Confirmar recepción del pedido",
+                                              ),
+                                              actions: [
+                                                TextButton(
+                                                  child: const Text("Cancelar"),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                                TextButton(
+                                                  child: const Text(
+                                                    "Confirmar",
+                                                  ),
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                    modificarEstadoPedido(
+                                                      "recibido",
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.list_alt,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'CONFIRMAR RECEPCION PEDIDO',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 0.8,
+                                          fontFamily: 'Roboto',
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
+                                      ),
+                                    ),
+                                  ),
+
                                 //BOTON ESTADO DEL PEDIDO
                                 if (widget.escaneoRealizado &&
                                     (widget.estadoPedido == "pendiente" ||
-                                    widget.estadoPedido == "enProceso" ||
-                                    widget.estadoPedido == "paraEnviar"))
+                                        widget.estadoPedido == "enProceso" ||
+                                        widget.estadoPedido == "paraEnviar" ||
+                                        widget.estadoPedido == "entregado" ||
+                                        widget.estadoPedido == "recibido" &&
+                                            !widget.puedePedirCuenta))
                                   Container(
                                     width: double.infinity,
                                     margin: const EdgeInsets.only(bottom: 15),
@@ -402,10 +515,7 @@ Future<void> verificarEncuesta() async {
                                                   ),
                                                   const SizedBox(height: 10),
                                                   Text(
-                                                    widget.estadoPedido ==
-                                                            "pendiente"
-                                                        ? "⏳ Pendiente de confirmación por el mozo."
-                                                        : "🍽️ En proceso. El equipo ya está preparando tu pedido.",
+                                                    mensajeEstado,
                                                     style: const TextStyle(
                                                       color: Colors.amber,
                                                       fontSize: 16,
@@ -413,6 +523,7 @@ Future<void> verificarEncuesta() async {
                                                           FontWeight.bold,
                                                     ),
                                                   ),
+
                                                   const SizedBox(height: 20),
                                                   Text(
                                                     "Gracias por tu paciencia 😊",
@@ -473,63 +584,90 @@ Future<void> verificarEncuesta() async {
                                     ),
                                   ),
 
-                              //BOTON ENCUESTA SATISFACCION
-                               if (widget.estadoPedido == "pendiente" ||
+                                //BOTON ENCUESTA SATISFACCION
+                                if (widget.estadoPedido == "pendiente" ||
                                     widget.estadoPedido == "enProceso" ||
-                                    widget.estadoPedido == "paraEnviar")
-                              Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.only(bottom: 15),
-                                child: ElevatedButton.icon(
-                                  onPressed: () async {
-                                  if (yaRealizoEncuesta) {
-                                    print("Mostrando resultados porque ya realizó encuesta");
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => EstadisticasPage()),
-                                    );
-                                  } else {
-                                    print("Todavía no realizó encuesta, mostrando formulario");
-                                    final resultado = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => EncuestaPage_cliente()),
-                                    );
+                                    widget.estadoPedido == "paraEnviar" ||
+                                    widget.estadoPedido == "entregado" ||
+                                    widget.estadoPedido == "recibido")
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 15),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () async {
+                                        if (yaRealizoEncuesta) {
+                                          print(
+                                            "Mostrando resultados porque ya realizó encuesta",
+                                          );
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => EstadisticasPage(),
+                                            ),
+                                          );
+                                        } else {
+                                          print(
+                                            "Todavía no realizó encuesta, mostrando formulario",
+                                          );
+                                          final resultado = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (_) => EncuestaPage_cliente(),
+                                            ),
+                                          );
 
-                                    print("Resultado al volver de encuesta: $resultado");
-                                    if (resultado == true) {
-                                      verificarEncuesta(); // 🔄 se actualiza yaRealizoEncuesta
-                                    }
-                                  }
-                                },
+                                          print(
+                                            "Resultado al volver de encuesta: $resultado",
+                                          );
+                                          if (resultado == true) {
+                                            verificarEncuesta(); // 🔄 se actualiza yaRealizoEncuesta
+                                          }
+                                        }
+                                      },
 
-
-                                  icon: Icon(
-                                    yaRealizoEncuesta ? Icons.bar_chart : Icons.star_rate,
-                                    color: const Color(0xFF26639C),
-                                  ),
-                                  label: Text(
-                                    yaRealizoEncuesta ? 'VER RESULTADOS ENCUESTA' : 'ENCUESTA SATISFACCIÓN',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 1,
-                                      fontFamily: 'Roboto',
+                                      icon: Icon(
+                                        yaRealizoEncuesta
+                                            ? Icons.bar_chart
+                                            : Icons.star_rate,
+                                        color: const Color(0xFF26639C),
+                                      ),
+                                      label: Text(
+                                        yaRealizoEncuesta
+                                            ? 'VER RESULTADOS ENCUESTA'
+                                            : 'ENCUESTA SATISFACCIÓN',
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
+                                      ),
                                     ),
                                   ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    foregroundColor: const Color(0xFF26639C),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(25),
-                                    ),
-                                    padding: const EdgeInsets.symmetric(vertical: 15),
-                                    elevation: 3,
-                                  ),
-                                ),
-                              ),
 
                                 // Botón Juegos
-                                if (widget.estadoPedido == "enProceso")
+                                if (widget.estadoPedido == "enProceso" ||
+                                    widget.estadoPedido == "entregado" ||
+                                    widget.estadoPedido == "paraEnviar" ||
+                                    widget.estadoPedido == "enProceso" ||
+                                    widget.estadoPedido == "recibido")
                                   Container(
                                     width: double.infinity,
                                     margin: const EdgeInsets.only(bottom: 20),
@@ -548,6 +686,51 @@ Future<void> verificarEncuesta() async {
                                       ),
                                       label: const Text(
                                         'JUEGOS',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          letterSpacing: 1,
+                                          fontFamily: 'Roboto',
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: const Color(
+                                          0xFF26639C,
+                                        ),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            25,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 15,
+                                        ),
+                                        elevation: 3,
+                                      ),
+                                    ),
+                                  ),
+
+                                // Botón Cuenta
+                                if (widget.puedePedirCuenta)
+                                  Container(
+                                    width: double.infinity,
+                                    margin: const EdgeInsets.only(bottom: 20),
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => const LoginPage(),
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(
+                                        Icons.money,
+                                        color: Color(0xFF26639C),
+                                      ),
+                                      label: const Text(
+                                        'PEDIR LA CUENTA',
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,

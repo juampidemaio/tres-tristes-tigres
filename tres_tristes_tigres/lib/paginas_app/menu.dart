@@ -22,7 +22,6 @@ class _MenuState extends State<Menu> {
   double importe = 0;
   String tipoSeleccionado = "Comida";
   bool desplegableAbierto = false;
-  int tiempoPromedio = 0;
 
   @override
   void initState() {
@@ -45,9 +44,6 @@ class _MenuState extends State<Menu> {
       pedido[idProducto] = 1;
     }
     sumarImporte(idProducto);
-    setState(() {
-      obtenerTiempoPromedio();
-    });
   }
 
   sacarPedido(int idProducto) {
@@ -64,9 +60,6 @@ class _MenuState extends State<Menu> {
           pedido.remove(idProducto);
         });
       }
-      setState(() {
-        obtenerTiempoPromedio();
-      });
     }
   }
 
@@ -102,7 +95,6 @@ class _MenuState extends State<Menu> {
         maximo = tiempo;
       }
     }
-    tiempoPromedio = maximo;
     return maximo;
   }
 
@@ -118,12 +110,14 @@ class _MenuState extends State<Menu> {
     await sb.agregarPedido(pedidoEnviado);
 
     Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => Principalcliente(url: widget.url, estadoPedido: "pendiente"),
-      ),
-    );
+  context,
+  MaterialPageRoute(
+    builder: (_) => Principalcliente(
+      url: widget.url,
+      estadoPedido: "pendiente",
+    ),
+  ),
+);
   }
 
   confirmarPedido() async {
@@ -404,7 +398,6 @@ class _MenuState extends State<Menu> {
                   Spacer(),
                   Text(
                     '\$${importe.toStringAsFixed(2)}',
-
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
@@ -477,26 +470,6 @@ class _MenuState extends State<Menu> {
 
                   if (pedido.isNotEmpty) ...[
                     Divider(height: 24),
-                    Row(
-                      children: [
-                        Text(
-                          'TIEMPO APROXIMADO:',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Spacer(),
-                        Text(
-                          '$tiempoPromedio minutos',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green[600],
-                          ),
-                        ),
-                      ],
-                    ),
                     Row(
                       children: [
                         Text(

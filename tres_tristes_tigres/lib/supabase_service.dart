@@ -228,4 +228,17 @@ class SupabaseService {
     }
     return estado;
   }
+
+  Future<void> modificarEstadoPedido(String correo, String nuevoEstado) async {
+    try {
+      await client
+          .from('pedidos')
+          .update({'estado': nuevoEstado})
+          .eq('cliente', correo);
+    } catch (e) {
+      print(
+        "ERROOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOR : $e",
+      );
+    }
+  }
 }

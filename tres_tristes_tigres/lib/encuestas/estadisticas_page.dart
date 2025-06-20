@@ -45,19 +45,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
     return contador;
   }
 
-  List<String> obtenerTodasLasImagenes() {
-    List<String> imagenes = [];
-    for (var encuesta in encuestas) {
-      for (var i = 1; i <= 3; i++) {
-        final url = encuesta['imagen$i'];
-        if (url != null && url.toString().isNotEmpty) {
-          imagenes.add(url);
-        }
-      }
-    }
-    return imagenes;
-  }
-
   Widget buildPieChart(Map<String, int> data, String titulo) {
     final total = data.values.fold(0, (a, b) => a + b);
     final items = data.entries.toList();
@@ -188,59 +175,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
     );
   }
 
-  Widget buildGaleria() {
-    final imagenes = obtenerTodasLasImagenes();
-    if (imagenes.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        const SizedBox(height: 16),
-        Text('Galería de experiencias',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
-        const SizedBox(height: 10),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: imagenes.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: 8,
-            crossAxisSpacing: 8,
-            childAspectRatio: 1,
-          ),
-          itemBuilder: (context, index) {
-            return GestureDetector(
-              onTap: () {
-                showDialog(
-                  context: context,
-                  builder: (_) => Dialog(
-                    backgroundColor: Colors.transparent,
-                    child: InteractiveViewer(
-                      child: Image.network(imagenes[index]),
-                    ),
-                  ),
-                );
-              },
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  imagenes[index],
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return const Center(child: CircularProgressIndicator());
-                  },
-                ),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 24),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     if (encuestas.isEmpty) {
@@ -271,7 +205,6 @@ class _EstadisticasPageState extends State<EstadisticasPage> {
             buildBarChart(contar('atencion'), 'Atención'),
             buildLineChart('recomendaria', '¿Lo recomendarías? (acumulado)'),
             buildBarChart(contar('ambiente'), 'Ambiente'),
-            buildGaleria(), 
           ],
         ),
       ),
